@@ -199,14 +199,14 @@ dtm_name <- removeSparseTerms(dtm_name, DegreeofSparse)
 #[25] "pink"      "secret"    "set"       "ship"      "shirt"     "shoes"     "shorts"    "size"     
 #[33] "small"     "tank"      "tee"       "top"       "victoria"  "victorias" "white"     "womens"
 
-rm(term_count_source, term_count_corpus, dtm_name)
+rm(term_count_source, term_count_corpus)
 rm(dtm_name)
 #create term dataframe to be matched with original dataset
 labeledTerms_name <- as.data.frame(as.matrix(dtm_name))
 
 save(labeledTerms_name, file="Bag_of_words_name.Rda")
 #load('Bag_of_words_name.Rda')
-
+rm(dtm_name)
 #########################
 ####ngram
 #########################
@@ -310,16 +310,20 @@ rm(tf24, tf3, tf2)
 
 
 
-
+load('labeledTerms_name.Rda')
+load('labeledTerms.Rda')
+load('topfeatures_df2.Rda')
+load('topfeatures_df24.Rda')
+load('topfeatures_df3.Rda')
 
 #########################
 ####Dummy variables
 #########################
 
-#subset columns for dummy variables creation
+#subset columns for dummy variables creation, only first category
 names(d)[6]<-'y'
-d_dummy <- d[,c(6,3,9:10)]
-
+d_dummy <- d[,c(6,3,9)]
+names(d)
 #Create dummy based on item_condition, first to third category
 library(caret)
 
@@ -330,7 +334,7 @@ dummies <- dummyVars(y ~ ., data = d_dummy)            # create dummyes for Xs
 ex <- data.frame(predict(dummies, newdata = d_dummy))  # actually creates the dummies
 names(ex) <- gsub("\\.", "", names(ex))                # removes dots from col names
 d_dummy <- cbind(d_dummy$y, ex) 
-rm(ex)
+rm(ex, dummies)
 
 #Convert dummy columns to factor first before merging
 names(d_dummy)[1]<-'y'
@@ -346,7 +350,7 @@ save(d_dummy, file='d_dummy.Rda')
 #Convert factors in the original data frame into factors
 #select from original data frame the required columns to be merged with d_dummy
 
-d_bind<-d[,c(6, 12, 13:17)]
+d_bind<-d[,c(6, 13:17)]
 
 d_bind$DummyBrand<-as.factor(d_bind$DummyBrand)
 d_bind$DummyItemDescription<-as.factor(d_bind$DummyItemDescription)
@@ -378,113 +382,98 @@ d_modelng3<-cbind(d_model, topfeatures_df3)
 rm(labeledTerms, labeledTerms_name, topfeatures_df24, topfeatures_df2, topfeatures_df3)
 
 ################################################################################
-# Remove Zero- and Near Zero-Variance Predictors    NOTE: run model without this....
+# Remove Zero- and Near Zero-Variance Predictors
 ################################################################################
 
 #bag of words
 nzv <- nearZeroVar(d_modelbw[,2:ncol(d_modelbw)], uniqueCut=10) # identify columns that are "near zero"
-d_filtered <- d_modelbw[,2:ncol(d_modelbw)][, -nzv]            # remove those columns from your dataset
-dim(d_filtered)                                # dimension of your filtered dataset
+
+d_select<-d_modelbw[, 2:ncol(d_modelbw)]
+d_filtered<-subset(d_select, select=c(-nzv))
+
+# remove those columns from your dataset
+dim(d_filtered) 
 
 # Remove those features that nearZeroVar() identified for removal from dataset.
 d_modelbw <- cbind(d_modelbw$y, d_filtered)   # combine y with the Xs
 names(d_modelbw)[1] <- "y"         # fix the y variable name
 
-rm(d_filtered, nzv)           # clean up  
+rm(d_filtered, nzv, d_select)           # clean up  
 
 #ngram2
 nzv <- nearZeroVar(d_modelng2[,2:ncol(d_modelng2)], uniqueCut=10) # identify columns that are "near zero"
-d_filtered <- d_modelng2[,2:ncol(d_modelng2)][, -nzv]            # remove those columns from your dataset
-dim(d_filtered)                                # dimension of your filtered dataset
+
+d_select<-d_modelng2[, 2:ncol(d_modelng2)]
+d_filtered<-subset(d_select, select=c(-nzv))
 
 # Remove those features that nearZeroVar() identified for removal from dataset.
 d_modelng2 <- cbind(d_modelng2$y, d_filtered)   # combine y with the Xs
 names(d_modelng2)[1] <- "y"         # fix the y variable name
 
-rm(d_filtered, nzv)           # clean up
+rm(d_filtered, nzv, d_select)   
 
 #ngram24
 nzv <- nearZeroVar(d_modelng24[,2:ncol(d_modelng24)], uniqueCut=10) # identify columns that are "near zero"
-d_filtered <- d_modelng24[,2:ncol(d_modelng24)][, -nzv]            # remove those columns from your dataset
-dim(d_filtered)                                # dimension of your filtered dataset
+
+d_select<-d_modelng24[, 2:ncol(d_modelng24)]
+d_filtered<-subset(d_select, select=c(-nzv))
 
 # Remove those features that nearZeroVar() identified for removal from dataset.
 d_modelng24 <- cbind(d_modelng24$y, d_filtered)   # combine y with the Xs
 names(d_modelng24)[1] <- "y"         # fix the y variable name
 
-rm(d_filtered, nzv)           # clean up
+rm(d_filtered, nzv, d_select)   
 
 #ngram3
 nzv <- nearZeroVar(d_modelng3[,2:ncol(d_modelng3)], uniqueCut=10) # identify columns that are "near zero"
-d_filtered <- d_modelng3[,2:ncol(d_modelng3)][, -nzv]            # remove those columns from your dataset
-dim(d_filtered)                                # dimension of your filtered dataset
+
+d_select<-d_modelng3[, 2:ncol(d_modelng3)]
+d_filtered<-subset(d_select, select=c(-nzv))
 
 # Remove those features that nearZeroVar() identified for removal from dataset.
 d_modelng3 <- cbind(d_modelng3$y, d_filtered)   # combine y with the Xs
 names(d_modelng3)[1] <- "y"         # fix the y variable name
 
-rm(d_filtered, nzv)           # clean up
+rm(d_filtered, nzv, d_select)
 
+save(d_modelbw, file='d_modelbw.Rda')
+save(d_modelng2, file='d_modelng2.Rda')
+save(d_modelng24, file='d_modelng24.Rda')
+save(d_modelng3, file='d_modelng3.Rda')
 
 ################################################################################
 # Remove Correlated Predictors
 ################################################################################
-# calculate correlation matrix using Pearson's correlation formula
-descrCor <-  cor(d_modelbw[,2:ncol(d)])                           # correlation matrix
-highCorr <- sum(abs(descrCor[upper.tri(descrCor)]) > .85) # number of Xs having a corr > some value
-summary(descrCor[upper.tri(descrCor)])                    # summarize the correlations
 
-# Identify which columns have a correlation greater than the specified absolute cutoff
-highlyCorDescr <- findCorrelation(descrCor, cutoff = 0.85)
-filteredDescr <- d[,2:ncol(d)][,-highlyCorDescr] # remove those specific columns from your dataset
-descrCor2 <- cor(filteredDescr)                  # calculate a new correlation matrix
+#No high correlation for bag of words and ngram
 
-# summarize correlations to see if all features are within range
-summary(descrCor2[upper.tri(descrCor2)])
-
-# update dataset by removing those filtered variables (highly correlated)
-d <- cbind(d$y, filteredDescr)
-names(d)[1] <- "y"
-
-rm(filteredDescr, descrCor, descrCor2, highCorr, highlyCorDescr)  # clean up
 
 ################################################################################
 # Remove linear dependencies and remove them
 ################################################################################
-# first save response
-y <- d$y
+save(d_modelbw, file='d_modelbw.Rda')
+load('d_modelbw.Rda')
 
-# create a column of 1s. This will help identify all the right linear combos
-d <- cbind(rep(1, nrow(d)), d[2:ncol(d)])
-names(d)[1] <- "ones"
-
-# identify the columns that are linear combos
-comboInfo <- findLinearCombos(d)       
-comboInfo                   #nothing needs to be removed anymore
-
-# remove columns identified that led to linear combos
-#d <- d[, -comboInfo$remove]
-
-# remove the "ones" column in the first column
-d <- d[, c(2:ncol(d))]
-
-# Add the target variable back to our data.frame
-d <- cbind(y, d)
-
-rm(y, comboInfo)  # clean up
+save(d_modelng2, file='d_modelng2.Rda')
+load('d_modelng2.Rda')
+#No linear dependencies left
 
 ################################################################################
 # Standardize (and/ normalize) your input features.
 ################################################################################
+
+#Bag of words
 #create a dataset that keeps unstandarized variables
-d_uns <- d[,c(2:ncol(d), 1)] 
+d_uns <- d_modelbw[,c(2:ncol(d_modelbw), 1)] 
 
 # Keep dummy variables aside so that those are not standarized
 # dCats => contains the 0/1 variable, dNums => contains numeric features 
-numcols <- apply(X=d, MARGIN=2, function(c) sum(c==0 | c==1)) != nrow(d)
-catcols <- apply(X=d, MARGIN=2, function(c) sum(c==0 | c==1)) == nrow(d)
-dNums <- d[,numcols]
-dCats <- d[,catcols]
+d_modelbw<-as.data.frame(d_modelbw)
+
+numcols <- apply(X=d_modelbw, MARGIN=2, function(c) sum(c==0 | c==1)) != nrow(d)
+catcols <- apply(X=d_modelbw, MARGIN=2, function(c) sum(c==0 | c==1)) == nrow(d)
+dNums <- d_modelbw[,numcols]
+dCats <- d_modelbw[,catcols]
 
 # Z-score: This will make all the numeric features centered at 0 and have a standard
 # deviation of 1. method = c("center", "scale")
@@ -498,10 +487,44 @@ preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale", 
 dNums <- predict(preProcValues, dNums)
 
 # combine the standardized numeric features with the dummy vars
-d <- cbind(dCats, dNums)
+d_modelbw <- cbind(dNums, dCats)
 
 #Clean-up the environment
 rm(preProcValues, numcols, catcols, dNums, dCats)  # clean up
+
+
+#ngram
+#create a dataset that keeps unstandarized variables
+d_uns <- d_modelng2[,c(2:ncol(d_modelng2), 1)] 
+
+# Keep dummy variables aside so that those are not standarized
+# dCats => contains the 0/1 variable, dNums => contains numeric features 
+d_modelng2<-as.data.frame(d_modelng2)
+
+numcols <- apply(X=d_modelng2, MARGIN=2, function(c) sum(c==0 | c==1)) != nrow(d)
+catcols <- apply(X=d_modelng2, MARGIN=2, function(c) sum(c==0 | c==1)) == nrow(d)
+dNums <- d_modelng2[,numcols]
+dCats <- d_modelng2[,catcols]
+
+# Z-score: This will make all the numeric features centered at 0 and have a standard
+# deviation of 1. method = c("center", "scale")
+
+#YeoJohnson: makes the distribution of features more bell-shaped c("YeoJohnson)
+
+# Identify the means, standard deviations, other parameters, etc. for transformation
+preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale", "YeoJohnson"))
+
+# Transforma variables using the predict() function
+dNums <- predict(preProcValues, dNums)
+
+# combine the standardized numeric features with the dummy vars
+d_modelng2 <- cbind(dNums, dCats)
+
+#Clean-up the environment
+rm(preProcValues, numcols, catcols, dNums, dCats)  # clean up
+
+#same result as d_modelng2, thus remove other two
+rm(d_modelng24, d_modelng3)
 
 
 
