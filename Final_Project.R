@@ -305,7 +305,29 @@ rm(tf24, tf3, tf2)
 
 ####### DON'T RUN!!! ######### DON'T RUN!!! ############# DON'T RUN!!! #####################
 #### Noun phrases ###WILL CRASH THE SERVER
+use<-d[,c("train_id","item_description")]
+library(udpipe)
+library(lattice)
+ud_model <- udpipe_download_model(language = "english")
+ud_model <- udpipe_load_model(ud_model$file_model)
 
+x <- udpipe_annotate(ud_model, x = use$item_description, doc_id = use$train_id)
+x<-as.data.frame(x)
+x<-x[,c("doc_id",'sentence_id','sentence','token','lemma','upos')]
+x$phrase_tag <- as_phrasemachine(x$upos, type = "upos")
+stats <- keywords_phrases(x = x$phrase_tag, term =tolower(x$token), 
+                          pattern = "(A|N)*N(P+D*(A|N)*N)*",
+                          is_regex = T,detailed = F) 
+
+stats<- subset(stats, ngram > 1)
+highfreq$key <- factor(highfreq$keyword, levels = rev(highfreq$keyword))
+barchart(key ~ freq, data = head(highfreq, 30), col = "cadetblue", 
+         main = "Keywords - simple noun phrases", xlab = "Frequency")
+x$term<-x$token
+x$term<-txt_recode_ngram(x$term, compound = stats$keyword, ngram = stats$ngram)
+y<-subset(x,x$term %in% stats$keyword)
+dtm <- document_term_frequencies(x, document = "doc_id", term = "term")
+dtm <- document_term_matrix(x = dtm)
 ####### DON'T RUN!!! ######### DON'T RUN!!! ############# DON'T RUN!!! #####################
 
                         
@@ -550,4 +572,10 @@ rm(preProcValues, numcols, catcols, dNums, dCats)  # clean up
 rm(d_modelng24, d_modelng3)
 
 
-
+################################################################################
+# VISUALLIZATION
+################################################################################
+##Wordcloud
+library(wordcloud)
+wordcloud(words = highfreq$keyword, freq = highfreq$freq, scale=c(4,0.1), max.words = 20,
+          colors = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02"))
