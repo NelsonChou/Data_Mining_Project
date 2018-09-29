@@ -319,19 +319,18 @@ test$brand_name<-ifelse(is.na(test$brand_name),'BrandMissing', test$brand_name)
 
 d_brand<-d%>%group_by(brand_name)%>%
         summarise(n=n())%>%
-        #summarise(mean=mean(price),n=n(),max=max(price),median=median(price))%>%
         arrange(desc(n))
 t_brand<-test%>%group_by(brand_name)%>%
         summarise(n=n())%>%
         arrange(desc(n))
-all<-merge(d_brand,t_brand, by='brand_name',all = T) ##keep all the brand occurred in both test and train
-all$n.x<-ifelse(is.na(all$n.x),0,all$n.x)
-all$n.y<-ifelse(is.na(all$n.y),0,all$n.y)
-all<-all%>%mutate(count=n.x+n.y)%>%arrange(desc(count))
+all<-merge(d_brand,t_brand, by='brand_name',all = T)%>% ##keeping both brands appeared in train and in test
+        mutate(n.x=ifelse(is.na(all$n.x),0,all$n.x))%>%
+        mutate(n.y=ifelse(is.na(all$n.y),0,all$n.y))%>%
+        mutate(count=n.x+n.y)%>%arrange(desc(count))
 want<-all[1:30,]            ##keep only 30 most frequently listed brands
 rm(d_brand,t_brand,all)
-d$filt_brand<-ifelse(d$brand_name%in%want$brand_name,d$brand_name,'others')
-
+d$filt_brand<-ifelse(d$brand_name%in%want$brand_name,d$brand_name,'others') ##USE d$filt_brand to generate brand dummies for d and test
+############################################################################################
 
 load('labeledTerms_name.Rda')
 load('labeledTerms.Rda')
