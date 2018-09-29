@@ -86,14 +86,16 @@ d$DummySecondCategory<-ifelse(is.na(d$SecondCategory),0,1)
 d$DummyThirdCategory<-ifelse(is.na(d$ThirdCategory),0,1)
 
 #Process brand name for dummy variables generation
-d$brand_name<-tolower(d$brand_name)
-d$brand_name<-removePunctuation(d$brand_name)
-d$brand_name<-stripWhitespace(d$brand_name)
-d$brand_name<-replace_symbol(d$brand_name)
-d$brand_name<-replace_number(d$brand_name)
+d$brand_name<-as.character(d$brand_name)
+#d$brand_name<-tolower(d$brand_name)   ##because not using bag of words on brand
+#d$brand_name<-removePunctuation(d$brand_name)
+#d$brand_name<-stripWhitespace(d$brand_name)
+#d$brand_name<-replace_symbol(d$brand_name)
+#d$brand_name<-replace_number(d$brand_name)
 
 #Filling in missing for later dummy variable creation
-d$brand_name<-ifelse(is.na(d$brand_name),'Missing', d$brand_name)
+d$brand_name<-ifelse(is.na(d$brand_name),'BrandMissing', d$brand_name)
+
 
 save(d, file="d.Rda")
 #load('d.Rda')
@@ -301,13 +303,34 @@ save(topfeatures_df3, file='topfeatures_df3.Rda')
 rm(freq_dfm24, freq_dfm24_1k, freq_dfm2, freq_dfm2_1k, freq_dfm3, freq_dfm3_1k)
 rm(tf24, tf3, tf2)
 
-#########################
-####noun phrases
-#########################
+####### DON'T RUN!!! ######### DON'T RUN!!! ############# DON'T RUN!!! #####################
+#### Noun phrases ###WILL CRASH THE SERVER
 
+####### DON'T RUN!!! ######### DON'T RUN!!! ############# DON'T RUN!!! #####################
 
+                        
 
+############################################################################################
+###################### Brand_Name selection ################################
+test<-fread("test.tsv",sep="\t",header=TRUE)
+test$brand_name<-ifelse(test$brand_name=="", NA, test$brand_name)
+test$brand_name<-as.character(test$brand_name)
+test$brand_name<-ifelse(is.na(test$brand_name),'BrandMissing', test$brand_name)
 
+d_brand<-d%>%group_by(brand_name)%>%
+        summarise(n=n())%>%
+        #summarise(mean=mean(price),n=n(),max=max(price),median=median(price))%>%
+        arrange(desc(n))
+t_brand<-test%>%group_by(brand_name)%>%
+        summarise(n=n())%>%
+        arrange(desc(n))
+all<-merge(d_brand,t_brand, by='brand_name',all = T) ##keep all the brand occurred in both test and train
+all$n.x<-ifelse(is.na(all$n.x),0,all$n.x)
+all$n.y<-ifelse(is.na(all$n.y),0,all$n.y)
+all<-all%>%mutate(count=n.x+n.y)%>%arrange(desc(count))
+want<-all[1:30,]            ##keep only 30 most frequently listed brands
+rm(d_brand,t_brand,all)
+d$filt_brand<-ifelse(d$brand_name%in%want$brand_name,d$brand_name,'others')
 
 
 load('labeledTerms_name.Rda')
@@ -315,7 +338,8 @@ load('labeledTerms.Rda')
 load('topfeatures_df2.Rda')
 load('topfeatures_df24.Rda')
 load('topfeatures_df3.Rda')
-
+                        
+                        
 #########################
 ####Dummy variables
 #########################
