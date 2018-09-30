@@ -345,7 +345,7 @@ load('topfeatures_df3.Rda')
 names(d)[6]<-'y'
 d_dummy <- d[,c(6,3,9,20)]
 names(d)
-#Create dummy based on item_condition, first to third category
+#Create dummy based on item_condition, first category
 library(caret)
 
 #convert item_condition_id to character for dummy variable
@@ -409,7 +409,7 @@ save(d_modelng3,file='ng3ready.Rda')
 # Remove Zero- and Near Zero-Variance Predictors
 ################################################################################
 
-#bag of words
+#Bag of words
 nzv <- nearZeroVar(d_modelbw[,2:ncol(d_modelbw)], uniqueCut=10) # identify columns that are "near zero"
 
 d_select<-d_modelbw[, 2:ncol(d_modelbw)]
