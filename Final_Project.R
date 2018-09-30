@@ -552,6 +552,32 @@ save(d_modelng3, file='feedcaret_d_modelng3.Rda')
 #add brand dummies to bag of words set
 #d_bw_brand<-cbind(d_modelbw,d_model[,24:54])
 
+############################
+#######Partition the dataset of each model
+############################
+
+set.seed(2019)
+inTrain <- createDataPartition(y = d$y,   # outcome variable
+                               p = .7,
+                               list = F)
+
+#bag of words partition
+trainbw <- d_modelngbw[inTrain,]  # training data set
+testbw <- d_modelngbw[-inTrain,]  # test data set
+
+#2 gram partition
+trainng2 <- d_modelng2[inTrain,]  # training data set
+testng2 <- d_modelng2[-inTrain,]  # test data set
+
+#3 gram partition
+trainng3 <- d_modelng3[inTrain,]  # training data set
+testng3 <- d_modelng3[-inTrain,]  # test data set
+
+#24 gram partition
+trainng24 <- d_modelng24[inTrain,]  # training data set
+testng24 <- d_modelng24[-inTrain,]  # test data set
+
+                 
 ################################################################################
 # LASSO ON Bag of words
 ###############################################################################
@@ -566,6 +592,176 @@ lassofit<- train(y~., data=d_modelbw,
                  tuneLength=38,metric='RMSE')
 lassofit
 
+######svm
+
+svmfitbw <-train(y ~ ., data=trainbw, 
+      method='svmRadial', tuneLength=15, 
+      trControl = ctrl, metric='RMSE')
+
+svmfitng2 <-train(y ~ ., data=trainng2, 
+               method='svmRadial', tuneLength=15, 
+               trControl = ctrl, metric='RMSE')
+
+svmfitng3 <-train(y ~ ., data=trainng3, 
+                  method='svmRadial', tuneLength=15, 
+                  trControl = ctrl, metric='RMSE')
+
+svmfitng24 <-train(y ~ ., data=trainng24, 
+                  method='svmRadial', tuneLength=15, 
+                  trControl = ctrl, metric='RMSE')
+
+######AdaBoost
+
+adaboostbw <- train(y ~ ., data=trainbw, 
+                   method='adaboost', tuneLength=2, 
+                   trControl = ctrl)
+
+adaboostng2 <- train(y ~ ., data=trainng2, 
+                   method='adaboost', tuneLength=2, 
+                   trControl = ctrl)
+
+adaboostng3 <- train(y ~ ., data=trainng3, 
+                    method='adaboost', tuneLength=2, 
+                    trControl = ctrl)
+
+adaboostng24 <- train(y ~ ., data=trainng24, 
+                    method='adaboost', tuneLength=2, 
+                    trControl = ctrl)
+
+###Random Forest
+rfbw <- train(y ~ ., data=trainbw, 
+                     method='rf', tuneLength=2, 
+                     trControl = ctrl)
+
+rfng2 <- train(y ~ ., data=trainng2, 
+              method='rf', tuneLength=2, 
+              trControl = ctrl)
+
+rfng3 <- train(y ~ ., data=trainng3, 
+               method='rf', tuneLength=2, 
+               trControl = ctrl)
+
+rfng24 <- train(y ~ ., data=trainng24, 
+               method='rf', tuneLength=2, 
+               trControl = ctrl)
+
+###XGBDart
+
+xgbbw <-train(y ~ ., data=trainbw, 
+              method='xgbDART', tuneLength=5, 
+              trControl = ctrl, verbose=F)
+
+xgbng2 <-train(y ~ ., data=trainng2, 
+              method='xgbDART', 
+              tuneLength=5, trControl = ctrl, verbose=F)
+
+xgbng3 <-train(y ~ ., data=trainng3, 
+               method='xgbDART', 
+               tuneLength=5, trControl = ctrl, verbose=F)
+
+xgbng24 <-train(y ~ ., data=trainng24, 
+                method='xgbDART', 
+                tuneLength=5, trControl = ctrl, verbose=F)
+
+###################
+###Prediction
+###################
+
+###Train dataset
+predictsvmbw_tr<-predict(trainbw, svmfitbw)
+predictsvmng2_tr<-predict(trainng2, svmfitng2)
+predictsvmng3_tr<-predict(trainng3, svmfitng3)
+predictsvmng24_tr<-predict(trainng24, svmfitng24)
+
+predictadabw_tr<-predict(trainbw, adaboostbw)
+predictadang2_tr<-predict(trainng2, adaboostng2)
+predictadang3_tr<-predict(trainng3, adaboostng3)
+predictadang24_tr<-predict(trainng24, adaboostng24)
+
+predictrfbw_tr<-predict(trainbw, rfbw)
+predictrfng2_tr<-predict(trainng2, rfng2)
+predictrfng3_tr<-predict(trainng3, rfng3)
+predictrfng24_tr<-predict(trainng24, rfng24)
+
+predictxgbbw_tr<-predict(trainbw, xgbbw)
+predictxgbng2_tr<-predict(trainng2, xgbng2)
+predictxgbng3_tr<-predict(trainng3, xgbng3)
+predictxgbng24_tr<-predict(trainng24, xgbng24)
+
+#Test dataset
+predictsvmbw_te<-predict(testbw, svmfitbw)
+predictsvmng2_te<-predict(testng2, svmfitng2)
+predictsvmng3_te<-predict(testng3, svmfitng3)
+predictsvmng24_te<-predict(testng24, svmfitng24)
+
+predictadabw_te<-predict(testbw, adaboostbw)
+predictadang2_te<-predict(testng2, adaboostng2)
+predictadang3_te<-predict(testng3, adaboostng3)
+predictadang24_te<-predict(testng24, adaboostng24)
+
+predictrfbw_te<-predict(testbw, rfbw)
+predictrfng2_te<-predict(testng2, rfng2)
+predictrfng3_te<-predict(testng3, rfng3)
+predictrfng24_te<-predict(testng24, rfng24)
+
+predictxgbbw_te<-predict(testbw, xgbbw)
+predictxgbng2_te<-predict(testng2, xgbng2)
+predictxgbng3_te<-predict(testng3, xgbng3)
+predictxgbng24_te<-predict(testng24, xgbng24)
+
+
+#Combine result
+tr_results <- rbind(
+  postResample(pred = predictsvmbw_tr, obs = train$y),
+  postResample(pred = predictadabw_tr, obs = train$y),
+  postResample(pred = predictrfbw_tr, obs = train$y),
+  postResample(pred = predictxgbbw_tr, obs = train$y),
+  postResample(pred = predictsvmng2_tr, obs = train$y),
+  postResample(pred = predictadang2_tr, obs = train$y),
+  postResample(pred = predictrfng2_tr, obs = train$y),
+  postResample(pred = predictxgbng2_tr,obs = train$y),
+  postResample(pred = predictsvmng3_tr, obs = train$y),
+  postResample(pred = predictadang3_tr, obs = train$y),
+  postResample(pred = predictrfng3_tr, obs = train$y),
+  postResample(pred = predictxgbng3_tr,obs = train$y),
+  postResample(pred = predictsvmng24_tr, obs = train$y),
+  postResample(pred = predictadang24_tr, obs = train$y),
+  postResample(pred = predictrfng24_tr, obs = train$y),
+  postResample(pred = predictxgbng24_tr,obs = train$y)
+)
+
+te_results <- rbind(
+  postResample(pred = predictsvmbw_te, obs = train$y),
+  postResample(pred = predictadabw_te, obs = train$y),
+  postResample(pred = predictrfbw_te, obs = train$y),
+  postResample(pred = predictxgbbw_te, obs = train$y),
+  postResample(pred = predictsvmng2_te, obs = train$y),
+  postResample(pred = predictadang2_te, obs = train$y),
+  postResample(pred = predictrfng2_te, obs = train$y),
+  postResample(pred = predictxgbng2_te,obs = train$y),
+  postResample(pred = predictsvmng3_te, obs = train$y),
+  postResample(pred = predictadang3_te, obs = train$y),
+  postResample(pred = predictrfng3_te, obs = train$y),
+  postResample(pred = predictxgbng3_te,obs = train$y),
+  postResample(pred = predictsvmng24_te, obs = train$y),
+  postResample(pred = predictadang24_te, obs = train$y),
+  postResample(pred = predictrfng24_te, obs = train$y),
+  postResample(pred = predictxgbng24_te,obs = train$y)
+)
+
+tr_results
+te_results
+
+Modelsbw <- c("SVM-bw","AdaBoost-bw", "Random Forest-bw","XGBoost-bw")
+Modelsng2 <- c("SVM-ng2","AdaBoost-ng2", "Random Forest-ng2","XGBoost-ng2")
+Modelsng3 <- c("SVM-ng3","AdaBoost-ng3", "Random Forest-ng3","XGBoost-ng3")
+Modelsng24 <- c("SVM-ng24","AdaBoost-ng24", "Random Forest-ng24","XGBoost-ng24")
+
+Set <- c(rep("Train",16))
+(tr_results <- data.frame(Modelsbw, Modelsng2, Modelsng3, Modelsng24, Set, tr_results))
+Set <- c(rep("Test",16))
+(te_results <- data.frame(Models, Set, te_results))
+                 
 
 ################################################################################
 # VISUALLIZATION
