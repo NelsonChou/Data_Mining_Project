@@ -410,55 +410,55 @@ save(d_modelng3,file='ng3ready.Rda')
 ################################################################################
 
 #Bag of words
-nzv <- nearZeroVar(d_modelbw[,2:ncol(d_modelbw)], uniqueCut=10) # identify columns that are "near zero"
+#nzv <- nearZeroVar(d_modelbw[,2:ncol(d_modelbw)], uniqueCut=10) # identify columns that are "near zero"
 
-d_select<-d_modelbw[, 2:ncol(d_modelbw)]
-d_filtered<-subset(d_select, select=c(-nzv))
+#d_select<-d_modelbw[, 2:ncol(d_modelbw)]
+#d_filtered<-subset(d_select, select=c(-nzv))
 
 # remove those columns from your dataset
-dim(d_filtered) 
+#dim(d_filtered) 
 
 # Remove those features that nearZeroVar() identified for removal from dataset.
-d_modelbw <- cbind(d_modelbw$y, d_filtered)   # combine y with the Xs
-names(d_modelbw)[1] <- "y"         # fix the y variable name
+#d_modelbw <- cbind(d_modelbw$y, d_filtered)   # combine y with the Xs
+#names(d_modelbw)[1] <- "y"         # fix the y variable name
 
-rm(d_filtered, nzv, d_select)           # clean up  
+#rm(d_filtered, nzv, d_select)           # clean up  
 
 #ngram2
-nzv <- nearZeroVar(d_modelng2[,2:ncol(d_modelng2)], uniqueCut=10) # identify columns that are "near zero"
+#nzv <- nearZeroVar(d_modelng2[,2:ncol(d_modelng2)], uniqueCut=10) # identify columns that are "near zero"
 
-d_select<-d_modelng2[, 2:ncol(d_modelng2)]
-d_filtered<-subset(d_select, select=c(-nzv))
+#d_select<-d_modelng2[, 2:ncol(d_modelng2)]
+#d_filtered<-subset(d_select, select=c(-nzv))
 
 # Remove those features that nearZeroVar() identified for removal from dataset.
-d_modelng2 <- cbind(d_modelng2$y, d_filtered)   # combine y with the Xs
-names(d_modelng2)[1] <- "y"         # fix the y variable name
+#d_modelng2 <- cbind(d_modelng2$y, d_filtered)   # combine y with the Xs
+#names(d_modelng2)[1] <- "y"         # fix the y variable name
 
-rm(d_filtered, nzv, d_select)   
+#rm(d_filtered, nzv, d_select)   
 
 #ngram24
-nzv <- nearZeroVar(d_modelng24[,2:ncol(d_modelng24)], uniqueCut=10) # identify columns that are "near zero"
+#nzv <- nearZeroVar(d_modelng24[,2:ncol(d_modelng24)], uniqueCut=10) # identify columns that are "near zero"
 
-d_select<-d_modelng24[, 2:ncol(d_modelng24)]
-d_filtered<-subset(d_select, select=c(-nzv))
+#d_select<-d_modelng24[, 2:ncol(d_modelng24)]
+#d_filtered<-subset(d_select, select=c(-nzv))
 
 # Remove those features that nearZeroVar() identified for removal from dataset.
-d_modelng24 <- cbind(d_modelng24$y, d_filtered)   # combine y with the Xs
-names(d_modelng24)[1] <- "y"         # fix the y variable name
+#d_modelng24 <- cbind(d_modelng24$y, d_filtered)   # combine y with the Xs
+#names(d_modelng24)[1] <- "y"         # fix the y variable name
 
-rm(d_filtered, nzv, d_select)   
+#rm(d_filtered, nzv, d_select)   
 
 #ngram3
-nzv <- nearZeroVar(d_modelng3[,2:ncol(d_modelng3)], uniqueCut=10) # identify columns that are "near zero"
+#nzv <- nearZeroVar(d_modelng3[,2:ncol(d_modelng3)], uniqueCut=10) # identify columns that are "near zero"
 
-d_select<-d_modelng3[, 2:ncol(d_modelng3)]
-d_filtered<-subset(d_select, select=c(-nzv))
+#d_select<-d_modelng3[, 2:ncol(d_modelng3)]
+#d_filtered<-subset(d_select, select=c(-nzv))
 
 # Remove those features that nearZeroVar() identified for removal from dataset.
-d_modelng3 <- cbind(d_modelng3$y, d_filtered)   # combine y with the Xs
-names(d_modelng3)[1] <- "y"         # fix the y variable name
+#d_modelng3 <- cbind(d_modelng3$y, d_filtered)   # combine y with the Xs
+#names(d_modelng3)[1] <- "y"         # fix the y variable name
 
-rm(d_filtered, nzv, d_select)
+#rm(d_filtered, nzv, d_select)
 
 ################################################################################
 # Remove Correlated Predictors
@@ -507,7 +507,7 @@ d_modelbw <- cbind(dNums, dCats)
 rm(preProcValues, numcols, catcols, dNums, dCats)  # clean up
 
 
-#ngram
+#ngram2
 #create a dataset that keeps unstandarized variables
 d_uns <- d_modelng2[,c(2:ncol(d_modelng2), 1)] 
 
@@ -537,11 +537,73 @@ d_modelng2 <- cbind(dNums, dCats)
 #Clean-up the environment
 rm(preProcValues, numcols, catcols, dNums, dCats)  # clean up
 
-#same result as d_modelng2, thus remove other two
-rm(d_modelng24, d_modelng3)
+
+#ngram24
+#create a dataset that keeps unstandarized variables
+d_uns <- d_modelng24[,c(2:ncol(d_modelng24), 1)] 
+
+# Keep dummy variables aside so that those are not standarized
+# dCats => contains the 0/1 variable, dNums => contains numeric features 
+d_modelng24<-as.data.frame(d_modelng24)
+
+numcols <- apply(X=d_modelng24, MARGIN=2, function(c) sum(c==0 | c==1)) != nrow(d)
+catcols <- apply(X=d_modelng24, MARGIN=2, function(c) sum(c==0 | c==1)) == nrow(d)
+dNums <- d_modelng24[,numcols]
+dCats <- d_modelng24[,catcols]
+
+# Z-score: This will make all the numeric features centered at 0 and have a standard
+# deviation of 1. method = c("center", "scale")
+
+#YeoJohnson: makes the distribution of features more bell-shaped c("YeoJohnson)
+
+# Identify the means, standard deviations, other parameters, etc. for transformation
+preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale", "YeoJohnson"))
+
+# Transforma variables using the predict() function
+dNums <- predict(preProcValues, dNums)
+
+# combine the standardized numeric features with the dummy vars
+d_modelng24 <- cbind(dNums, dCats)
+
+#Clean-up the environment
+rm(preProcValues, numcols, catcols, dNums, dCats)  # clean up
+
+
+#ngram3
+#create a dataset that keeps unstandarized variables
+d_uns <- d_modelng3[,c(2:ncol(d_modelng3), 1)] 
+
+# Keep dummy variables aside so that those are not standarized
+# dCats => contains the 0/1 variable, dNums => contains numeric features 
+d_modelng3<-as.data.frame(d_modelng3)
+
+numcols <- apply(X=d_modelng3, MARGIN=2, function(c) sum(c==0 | c==1)) != nrow(d)
+catcols <- apply(X=d_modelng3, MARGIN=2, function(c) sum(c==0 | c==1)) == nrow(d)
+dNums <- d_modelng3[,numcols]
+dCats <- d_modelng3[,catcols]
+
+# Z-score: This will make all the numeric features centered at 0 and have a standard
+# deviation of 1. method = c("center", "scale")
+
+#YeoJohnson: makes the distribution of features more bell-shaped c("YeoJohnson)
+
+# Identify the means, standard deviations, other parameters, etc. for transformation
+preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale", "YeoJohnson"))
+
+# Transforma variables using the predict() function
+dNums <- predict(preProcValues, dNums)
+
+# combine the standardized numeric features with the dummy vars
+d_modelng3 <- cbind(dNums, dCats)
+
+#Clean-up the environment
+rm(preProcValues, numcols, catcols, dNums, dCats)  # clean up
+
 save(d_model,file='dwithallbrands.Rda')
 save(d_modelbw, file='feedcaret_d_modelbw.Rda')
 save(d_modelng2, file='feedcaret_d_modelng2.Rda')
+save(d_modelng24, file='feedcaret_d_modelng24.Rda')
+save(d_modelng3, file='feedcaret_d_modelng3.Rda')
                  
 #load('dwithallbrands.Rda')
 #load('feedcaret_d_modelbw.Rda')
