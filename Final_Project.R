@@ -568,13 +568,16 @@ d_modelbw$FirstCategoryMen<-ifelse(d_modelbw$FirstCategoryMen=='0',0,1)
 d_modelbw$FirstCategoryWomen<-ifelse(d_modelbw$FirstCategoryWomen=='0',0,1)
 d_modelbw$filt_brandBrandMissing<-ifelse(d_modelbw$filt_brandBrandMissing=='0',0,1)
 d_modelbw$filt_brandothers<-ifelse(d_modelbw$filt_brandothers=='0',0,1)
+
+#Create partition: Bag of words
 set.seed(2019)
 inTrain <- createDataPartition(y = d_modelbw$y,   # outcome variable
-                               p = .80,   # doing a 5-fold
+                               p = .80,
                                list = F)
 train <- d_modelbw[inTrain,]  # training data set
 test <- d_modelbw[-inTrain,]  # test data set
 
+#Run PCA: Bag of Words
 library(psych)
 pcabw<- principal(train[,2:ncol(train)], 
                  nfactors = 38,
@@ -597,6 +600,8 @@ d_modelng2$FirstCategoryMen<-ifelse(d_modelng2$FirstCategoryMen=='0',0,1)
 d_modelng2$FirstCategoryWomen<-ifelse(d_modelng2$FirstCategoryWomen=='0',0,1)
 d_modelng2$filt_brandBrandMissing<-ifelse(d_modelng2$filt_brandBrandMissing=='0',0,1)
 d_modelng2$filt_brandothers<-ifelse(d_modelng2$filt_brandothers=='0',0,1)
+
+#Create partition: ngram2              
 set.seed(2019)
 inTrain <- createDataPartition(y = d_modelng2$y,   # outcome variable
                                p = .80,   # doing a 5-fold
@@ -615,7 +620,9 @@ pcang2$loadings
 ################################################################################
 # LASSO ON Bag of words
 ###############################################################################
+
 library(caret)
+#k-fold: 5 fold
 ctrl<-trainControl(method='cv',number=5,classProbs = F, 
                    summaryFunction = defaultSummary)
 
