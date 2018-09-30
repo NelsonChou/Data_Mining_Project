@@ -558,7 +558,7 @@ save(d_modelng3, file='feedcaret_d_modelng3.Rda')
 
 set.seed(2019)
 inTrain <- createDataPartition(y = d$y,   # outcome variable
-                               p = .7,
+                               p = .80,
                                list = F)
 
 #bag of words partition
@@ -577,9 +577,8 @@ testng3 <- d_modelng3[-inTrain,]  # test data set
 trainng24 <- d_modelng24[inTrain,]  # training data set
 testng24 <- d_modelng24[-inTrain,]  # test data set
 
-                 
 ################################################################################
-# LASSO ON Bag of words
+# Cross validation
 ###############################################################################
 
 library(caret)
@@ -587,10 +586,23 @@ library(caret)
 ctrl<-trainControl(method='cv',number=5,classProbs = F, 
                    summaryFunction = defaultSummary)
 
-lassofit<- train(y~., data=d_modelbw,
+###Lasso
+
+lassofitbw<- train(y~., data=trainbw,
                  method='lars', trControl=ctrl,
                  tuneLength=38,metric='RMSE')
-lassofit
+
+lassofitng2<- train(y~., data=trainng2,
+                 method='lars', trControl=ctrl,
+                 tuneLength=38,metric='RMSE')
+
+lassofitng3<- train(y~., data=trainng3,
+                    method='lars', trControl=ctrl,
+                    tuneLength=38,metric='RMSE')
+
+lassofitng24<- train(y~., data=trainng24,
+                    method='lars', trControl=ctrl,
+                    tuneLength=38,metric='RMSE')
 
 ######svm
 
