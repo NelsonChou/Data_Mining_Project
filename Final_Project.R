@@ -607,19 +607,19 @@ lassofitng24<- train(y~., data=trainng24,
 ######svm
 
 svmfitbw <-train(y ~ ., data=trainbw, 
-      method='svmRadial', tuneLength=15, 
+      method='svmRadial', tuneLength=5, 
       trControl = ctrl, metric='RMSE')
 
 svmfitng2 <-train(y ~ ., data=trainng2, 
-               method='svmRadial', tuneLength=15, 
+               method='svmRadial', tuneLength=5, 
                trControl = ctrl, metric='RMSE')
 
 svmfitng3 <-train(y ~ ., data=trainng3, 
-                  method='svmRadial', tuneLength=15, 
+                  method='svmRadial', tuneLength=5, 
                   trControl = ctrl, metric='RMSE')
 
 svmfitng24 <-train(y ~ ., data=trainng24, 
-                  method='svmRadial', tuneLength=15, 
+                  method='svmRadial', tuneLength=5, 
                   trControl = ctrl, metric='RMSE')
 
 ######AdaBoost
