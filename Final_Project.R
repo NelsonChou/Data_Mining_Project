@@ -405,60 +405,6 @@ save(d_modelng2,file='ng2ready.Rda')
 save(d_modelng24,file='ng24ready.Rda')
 save(d_modelng3,file='ng3ready.Rda')
 #load('bwready.Rda');load('ng2ready.Rda');load('ng24ready.Rda');load('ng3ready.Rda')
-################################################################################
-# Remove Zero- and Near Zero-Variance Predictors
-################################################################################
-
-#Bag of words
-#nzv <- nearZeroVar(d_modelbw[,2:ncol(d_modelbw)], uniqueCut=10) # identify columns that are "near zero"
-
-#d_select<-d_modelbw[, 2:ncol(d_modelbw)]
-#d_filtered<-subset(d_select, select=c(-nzv))
-
-# remove those columns from your dataset
-#dim(d_filtered) 
-
-# Remove those features that nearZeroVar() identified for removal from dataset.
-#d_modelbw <- cbind(d_modelbw$y, d_filtered)   # combine y with the Xs
-#names(d_modelbw)[1] <- "y"         # fix the y variable name
-
-#rm(d_filtered, nzv, d_select)           # clean up  
-
-#ngram2
-#nzv <- nearZeroVar(d_modelng2[,2:ncol(d_modelng2)], uniqueCut=10) # identify columns that are "near zero"
-
-#d_select<-d_modelng2[, 2:ncol(d_modelng2)]
-#d_filtered<-subset(d_select, select=c(-nzv))
-
-# Remove those features that nearZeroVar() identified for removal from dataset.
-#d_modelng2 <- cbind(d_modelng2$y, d_filtered)   # combine y with the Xs
-#names(d_modelng2)[1] <- "y"         # fix the y variable name
-
-#rm(d_filtered, nzv, d_select)   
-
-#ngram24
-#nzv <- nearZeroVar(d_modelng24[,2:ncol(d_modelng24)], uniqueCut=10) # identify columns that are "near zero"
-
-#d_select<-d_modelng24[, 2:ncol(d_modelng24)]
-#d_filtered<-subset(d_select, select=c(-nzv))
-
-# Remove those features that nearZeroVar() identified for removal from dataset.
-#d_modelng24 <- cbind(d_modelng24$y, d_filtered)   # combine y with the Xs
-#names(d_modelng24)[1] <- "y"         # fix the y variable name
-
-#rm(d_filtered, nzv, d_select)   
-
-#ngram3
-#nzv <- nearZeroVar(d_modelng3[,2:ncol(d_modelng3)], uniqueCut=10) # identify columns that are "near zero"
-
-#d_select<-d_modelng3[, 2:ncol(d_modelng3)]
-#d_filtered<-subset(d_select, select=c(-nzv))
-
-# Remove those features that nearZeroVar() identified for removal from dataset.
-#d_modelng3 <- cbind(d_modelng3$y, d_filtered)   # combine y with the Xs
-#names(d_modelng3)[1] <- "y"         # fix the y variable name
-
-#rm(d_filtered, nzv, d_select)
 
 ################################################################################
 # Remove Correlated Predictors
@@ -495,7 +441,7 @@ dCats <- d_modelbw[,catcols]
 #YeoJohnson: makes the distribution of features more bell-shaped c("YeoJohnson)
 
 # Identify the means, standard deviations, other parameters, etc. for transformation
-preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale", "YeoJohnson"))
+preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale"))
 
 # Transforma variables using the predict() function
 dNums <- predict(preProcValues, dNums)
@@ -523,10 +469,8 @@ dCats <- d_modelng2[,catcols]
 # Z-score: This will make all the numeric features centered at 0 and have a standard
 # deviation of 1. method = c("center", "scale")
 
-#YeoJohnson: makes the distribution of features more bell-shaped c("YeoJohnson)
-
 # Identify the means, standard deviations, other parameters, etc. for transformation
-preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale", "YeoJohnson"))
+preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale"))
 
 # Transforma variables using the predict() function
 dNums <- predict(preProcValues, dNums)
@@ -554,10 +498,8 @@ dCats <- d_modelng24[,catcols]
 # Z-score: This will make all the numeric features centered at 0 and have a standard
 # deviation of 1. method = c("center", "scale")
 
-#YeoJohnson: makes the distribution of features more bell-shaped c("YeoJohnson)
-
 # Identify the means, standard deviations, other parameters, etc. for transformation
-preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale", "YeoJohnson"))
+preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale"))
 
 # Transforma variables using the predict() function
 dNums <- predict(preProcValues, dNums)
@@ -585,10 +527,8 @@ dCats <- d_modelng3[,catcols]
 # Z-score: This will make all the numeric features centered at 0 and have a standard
 # deviation of 1. method = c("center", "scale")
 
-#YeoJohnson: makes the distribution of features more bell-shaped c("YeoJohnson)
-
 # Identify the means, standard deviations, other parameters, etc. for transformation
-preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale", "YeoJohnson"))
+preProcValues <- preProcess(dNums[,2:ncol(dNums)], method = c("center","scale"))
 
 # Transforma variables using the predict() function
 dNums <- predict(preProcValues, dNums)
@@ -611,73 +551,6 @@ save(d_modelng3, file='feedcaret_d_modelng3.Rda')
 
 #add brand dummies to bag of words set
 #d_bw_brand<-cbind(d_modelbw,d_model[,24:54])
-################################################################################
-# PCA 
-################################################################################
-## for bag of words
-names(d_modelbw)[27]<-'shipping_cost'
-
-d_modelbw$shipping_cost<-ifelse(d_modelbw$shipping_cost=='0',0,1)
-d_modelbw$DummyBrand<-ifelse(d_modelbw$DummyBrand=='0',0,1)
-d_modelbw$DummyItemDescription<-ifelse(d_modelbw$DummyItemDescription=='0',0,1)
-d_modelbw$item_condition_id1<-ifelse(d_modelbw$item_condition_id1=='0',0,1)
-d_modelbw$item_condition_id2<-ifelse(d_modelbw$item_condition_id2=='0',0,1)
-d_modelbw$item_condition_id3<-ifelse(d_modelbw$item_condition_id3=='0',0,1)
-d_modelbw$FirstCategoryBeauty<-ifelse(d_modelbw$FirstCategoryBeauty=='0',0,1)
-d_modelbw$FirstCategoryElectronics<-ifelse(d_modelbw$FirstCategoryElectronics=='0',0,1)
-d_modelbw$FirstCategoryKids<-ifelse(d_modelbw$FirstCategoryKids=='0',0,1)
-d_modelbw$FirstCategoryMen<-ifelse(d_modelbw$FirstCategoryMen=='0',0,1)
-d_modelbw$FirstCategoryWomen<-ifelse(d_modelbw$FirstCategoryWomen=='0',0,1)
-d_modelbw$filt_brandBrandMissing<-ifelse(d_modelbw$filt_brandBrandMissing=='0',0,1)
-d_modelbw$filt_brandothers<-ifelse(d_modelbw$filt_brandothers=='0',0,1)
-
-#Create partition: Bag of words
-set.seed(2019)
-inTrain <- createDataPartition(y = d_modelbw$y,   # outcome variable
-                               p = .80,
-                               list = F)
-train <- d_modelbw[inTrain,]  # training data set
-test <- d_modelbw[-inTrain,]  # test data set
-
-#Run PCA: Bag of Words
-library(psych)
-pcabw<- principal(train[,2:ncol(train)], 
-                 nfactors = 38,
-                 rotate = 'none', 
-                 scores = T
-)
-pcabw$loadings
-
-## for n-gram
-d_modelng2$shipping<-ifelse(d_modelng2$shipping=='0',0,1)
-d_modelng2$DummyBrand<-ifelse(d_modelng2$DummyBrand=='0',0,1)
-d_modelng2$DummyItemDescription<-ifelse(d_modelng2$DummyItemDescription=='0',0,1)
-d_modelng2$item_condition_id1<-ifelse(d_modelng2$item_condition_id1=='0',0,1)
-d_modelng2$item_condition_id2<-ifelse(d_modelng2$item_condition_id2=='0',0,1)
-d_modelng2$item_condition_id3<-ifelse(d_modelng2$item_condition_id3=='0',0,1)
-d_modelng2$FirstCategoryBeauty<-ifelse(d_modelng2$FirstCategoryBeauty=='0',0,1)
-d_modelng2$FirstCategoryElectronics<-ifelse(d_modelng2$FirstCategoryElectronics=='0',0,1)
-d_modelng2$FirstCategoryKids<-ifelse(d_modelng2$FirstCategoryKids=='0',0,1)
-d_modelng2$FirstCategoryMen<-ifelse(d_modelng2$FirstCategoryMen=='0',0,1)
-d_modelng2$FirstCategoryWomen<-ifelse(d_modelng2$FirstCategoryWomen=='0',0,1)
-d_modelng2$filt_brandBrandMissing<-ifelse(d_modelng2$filt_brandBrandMissing=='0',0,1)
-d_modelng2$filt_brandothers<-ifelse(d_modelng2$filt_brandothers=='0',0,1)
-
-#Create partition: ngram2              
-set.seed(2019)
-inTrain <- createDataPartition(y = d_modelng2$y,   # outcome variable
-                               p = .80,   # doing a 5-fold
-                               list = F)
-train <- d_modelng2[inTrain,]  # training data set
-test <- d_modelng2[-inTrain,]  # test data set
-
-library(psych)
-pcang2<- principal(train[,2:ncol(train)], 
-                 nfactors = 15,
-                 rotate = 'none', 
-                 scores = T
-)
-pcang2$loadings
 
 ################################################################################
 # LASSO ON Bag of words
