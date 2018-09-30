@@ -2,7 +2,7 @@
 ####Data Mining Final Project
 #############################
 
-setwd('/home/chou71/Downloads')
+setwd('~/Desktop')
 
 rm(list=ls())
 ###############################
@@ -100,9 +100,9 @@ d$brand_name<-ifelse(is.na(d$brand_name),'BrandMissing', d$brand_name)
 save(d, file="d.Rda")
 #load('d.Rda')
 
-#########################
+####################################################################################################
 ####Bag of Words
-#########################
+####################################################################################################
 
 ###Item_description
 ###################
@@ -139,9 +139,6 @@ d$item_description_processed<-removeWords(d$item_description_processed, stopword
 #[25] "tags"      "x"         "firm"      "items"     "just"      "white"     "medium"    "perfect"  
 #[33] "cute"      "blue"      "comes"     "large"     ""        "home"      "super"     "ship"  
 
-#save the file
-save(d, file="item_description_processed.Rda")
-#load("item_description_processed.Rda")
 
 #list out stop words for English
 #stopwords("en")
@@ -202,16 +199,20 @@ dtm_name <- removeSparseTerms(dtm_name, DegreeofSparse)
 #[33] "small"     "tank"      "tee"       "top"       "victoria"  "victorias" "white"     "womens"
 
 rm(term_count_source, term_count_corpus)
-rm(dtm_name)
 #create term dataframe to be matched with original dataset
 labeledTerms_name <- as.data.frame(as.matrix(dtm_name))
 
 save(labeledTerms_name, file="Bag_of_words_name.Rda")
 #load('Bag_of_words_name.Rda')
 rm(dtm_name)
-#########################
+
+#save the file
+save(d, file="item_description&name_processed.Rda")
+#load("item_description&name_processed.Rda")
+
+####################################################################################################
 ####ngram
-#########################
+####################################################################################################
 
 ###tokenize###
 toks <- tokens(d$item_description, 
@@ -303,77 +304,53 @@ save(topfeatures_df3, file='topfeatures_df3.Rda')
 rm(freq_dfm24, freq_dfm24_1k, freq_dfm2, freq_dfm2_1k, freq_dfm3, freq_dfm3_1k)
 rm(tf24, tf3, tf2)
 
-####### DON'T RUN!!! ######### DON'T RUN!!! ############# DON'T RUN!!! #####################
-#### Noun phrases ###WILL CRASH THE SERVER
-use<-d[,c("train_id","item_description")]
-library(udpipe)
-library(lattice)
-ud_model <- udpipe_download_model(language = "english")
-ud_model <- udpipe_load_model(ud_model$file_model)
-
-x <- udpipe_annotate(ud_model, x = use$item_description, doc_id = use$train_id)
-x<-as.data.frame(x)
-x<-x[,c("doc_id",'sentence_id','sentence','token','lemma','upos')]
-x$phrase_tag <- as_phrasemachine(x$upos, type = "upos")
-stats <- keywords_phrases(x = x$phrase_tag, term =tolower(x$token), 
-                          pattern = "(A|N)*N(P+D*(A|N)*N)*",
-                          is_regex = T,detailed = F) 
-
-stats<- subset(stats, ngram > 1)
-highfreq$key <- factor(highfreq$keyword, levels = rev(highfreq$keyword))
-barchart(key ~ freq, data = head(highfreq, 30), col = "cadetblue", 
-         main = "Keywords - simple noun phrases", xlab = "Frequency")
-x$term<-x$token
-x$term<-txt_recode_ngram(x$term, compound = stats$keyword, ngram = stats$ngram)
-y<-subset(x,x$term %in% stats$keyword)
-dtm <- document_term_frequencies(x, document = "doc_id", term = "term")
-dtm <- document_term_matrix(x = dtm)
-####### DON'T RUN!!! ######### DON'T RUN!!! ############# DON'T RUN!!! #####################
-
-                        
 
 ############################################################################################
 ###################### Brand_Name selection ################################
+load("item_description&name_processed.Rda")
 test<-fread("test.tsv",sep="\t",header=TRUE)
 test$brand_name<-ifelse(test$brand_name=="", NA, test$brand_name)
 test$brand_name<-as.character(test$brand_name)
 test$brand_name<-ifelse(is.na(test$brand_name),'BrandMissing', test$brand_name)
 
 d_brand<-d%>%group_by(brand_name)%>%
-        summarise(n=n())%>%
-        arrange(desc(n))
+  summarise(n=n())%>%
+  arrange(desc(n))
 t_brand<-test%>%group_by(brand_name)%>%
-        summarise(n=n())%>%
-        arrange(desc(n))
-all<-merge(d_brand,t_brand, by='brand_name',all = T)%>% ##keeping both brands appeared in train and in test
-        mutate(n.x=ifelse(is.na(all$n.x),0,all$n.x))%>%
-        mutate(n.y=ifelse(is.na(all$n.y),0,all$n.y))%>%
-        mutate(count=n.x+n.y)%>%arrange(desc(count))
+  summarise(n=n())%>%
+  arrange(desc(n))
+all<-merge(d_brand,t_brand, by='brand_name',all = T)
+all<-all%>% ##keeping both brands appeared in train and in test
+  mutate(n.x=ifelse(is.na(all$n.x),0,all$n.x))%>%
+  mutate(n.y=ifelse(is.na(all$n.y),0,all$n.y))%>%
+  mutate(count=n.x+n.y)%>%arrange(desc(count))
 want<-all[1:30,]            ##keep only 30 most frequently listed brands
-rm(d_brand,t_brand,all)
 d$filt_brand<-ifelse(d$brand_name%in%want$brand_name,d$brand_name,'others') ##USE d$filt_brand to generate brand dummies for d and test
+rm(d_brand,t_brand,all,want)
+save(d,file="dready.Rda")
 ############################################################################################
-
+rm(test)
 load('labeledTerms_name.Rda')
 load('labeledTerms.Rda')
 load('topfeatures_df2.Rda')
 load('topfeatures_df24.Rda')
 load('topfeatures_df3.Rda')
-                        
-                        
+
+
 #########################
 ####Dummy variables
 #########################
 
 #subset columns for dummy variables creation, only first category
 names(d)[6]<-'y'
-d_dummy <- d[,c(6,3,9)]
+d_dummy <- d[,c(6,3,9,20)]
 names(d)
-#Create dummy based on item_condition, first to third category
+#Create dummy based on item_condition, first category
 library(caret)
 
 #convert item_condition_id to character for dummy variable
-d_dummy$item_condition_id<-as.character(d_dummy$item_condition_id)
+d_dummy$item_condition_id<-as.character(d_dummy$item_condition_id) 
+      ##maybe change after finding out the relationshi between cnditions
 
 dummies <- dummyVars(y ~ ., data = d_dummy)            # create dummyes for Xs
 ex <- data.frame(predict(dummies, newdata = d_dummy))  # actually creates the dummies
@@ -395,7 +372,7 @@ save(d_dummy, file='d_dummy.Rda')
 #Convert factors in the original data frame into factors
 #select from original data frame the required columns to be merged with d_dummy
 
-d_bind<-d[,c(6, 13:17)]
+d_bind<-d[,c(6,7, 13:17)]
 
 d_bind$DummyBrand<-as.factor(d_bind$DummyBrand)
 d_bind$DummyItemDescription<-as.factor(d_bind$DummyItemDescription)
@@ -420,17 +397,19 @@ d_modelng24<-cbind(d_model, topfeatures_df24)
 d_modelng2<-cbind(d_model, topfeatures_df2)
 d_modelng3<-cbind(d_model, topfeatures_df3)
 
-#merge with noun phrases
-
 
 
 rm(labeledTerms, labeledTerms_name, topfeatures_df24, topfeatures_df2, topfeatures_df3)
-
+save(d_modelbw,file='bwready.Rda')
+save(d_modelng2,file='ng2ready.Rda')
+save(d_modelng24,file='ng24ready.Rda')
+save(d_modelng3,file='ng3ready.Rda')
+#load('bwready.Rda');load('ng2ready.Rda');load('ng24ready.Rda');load('ng3ready.Rda')
 ################################################################################
 # Remove Zero- and Near Zero-Variance Predictors
 ################################################################################
 
-#bag of words
+#Bag of words
 nzv <- nearZeroVar(d_modelbw[,2:ncol(d_modelbw)], uniqueCut=10) # identify columns that are "near zero"
 
 d_select<-d_modelbw[, 2:ncol(d_modelbw)]
@@ -481,26 +460,16 @@ names(d_modelng3)[1] <- "y"         # fix the y variable name
 
 rm(d_filtered, nzv, d_select)
 
-save(d_modelbw, file='d_modelbw.Rda')
-save(d_modelng2, file='d_modelng2.Rda')
-save(d_modelng24, file='d_modelng24.Rda')
-save(d_modelng3, file='d_modelng3.Rda')
-
 ################################################################################
 # Remove Correlated Predictors
 ################################################################################
 
 #No high correlation for bag of words and ngram
 
-
 ################################################################################
 # Remove linear dependencies and remove them
 ################################################################################
-save(d_modelbw, file='d_modelbw.Rda')
-load('d_modelbw.Rda')
 
-save(d_modelng2, file='d_modelng2.Rda')
-load('d_modelng2.Rda')
 #No linear dependencies left
 
 ################################################################################
@@ -570,6 +539,90 @@ rm(preProcValues, numcols, catcols, dNums, dCats)  # clean up
 
 #same result as d_modelng2, thus remove other two
 rm(d_modelng24, d_modelng3)
+save(d_model,file='dwithallbrands.Rda')
+save(d_modelbw, file='feedcaret_d_modelbw.Rda')
+save(d_modelng2, file='feedcaret_d_modelng2.Rda')
+                 
+#load('dwithallbrands.Rda')
+#load('feedcaret_d_modelbw.Rda')
+#load('feedcaret_d_modelng2.Rda')
+
+#add brand dummies to bag of words set
+#d_bw_brand<-cbind(d_modelbw,d_model[,24:54])
+################################################################################
+# PCA 
+################################################################################
+## for bag of words
+names(d_modelbw)[27]<-'shipping_cost'
+
+d_modelbw$shipping_cost<-ifelse(d_modelbw$shipping_cost=='0',0,1)
+d_modelbw$DummyBrand<-ifelse(d_modelbw$DummyBrand=='0',0,1)
+d_modelbw$DummyItemDescription<-ifelse(d_modelbw$DummyItemDescription=='0',0,1)
+d_modelbw$item_condition_id1<-ifelse(d_modelbw$item_condition_id1=='0',0,1)
+d_modelbw$item_condition_id2<-ifelse(d_modelbw$item_condition_id2=='0',0,1)
+d_modelbw$item_condition_id3<-ifelse(d_modelbw$item_condition_id3=='0',0,1)
+d_modelbw$FirstCategoryBeauty<-ifelse(d_modelbw$FirstCategoryBeauty=='0',0,1)
+d_modelbw$FirstCategoryElectronics<-ifelse(d_modelbw$FirstCategoryElectronics=='0',0,1)
+d_modelbw$FirstCategoryKids<-ifelse(d_modelbw$FirstCategoryKids=='0',0,1)
+d_modelbw$FirstCategoryMen<-ifelse(d_modelbw$FirstCategoryMen=='0',0,1)
+d_modelbw$FirstCategoryWomen<-ifelse(d_modelbw$FirstCategoryWomen=='0',0,1)
+d_modelbw$filt_brandBrandMissing<-ifelse(d_modelbw$filt_brandBrandMissing=='0',0,1)
+d_modelbw$filt_brandothers<-ifelse(d_modelbw$filt_brandothers=='0',0,1)
+set.seed(2019)
+inTrain <- createDataPartition(y = d_modelbw$y,   # outcome variable
+                               p = .80,   # doing a 5-fold
+                               list = F)
+train <- d_modelbw[inTrain,]  # training data set
+test <- d_modelbw[-inTrain,]  # test data set
+
+library(psych)
+pcabw<- principal(train[,2:ncol(train)], 
+                 nfactors = 38,
+                 rotate = 'none', 
+                 scores = T
+)
+pcabw$loadings
+
+## for n-gram
+d_modelng2$shipping<-ifelse(d_modelng2$shipping=='0',0,1)
+d_modelng2$DummyBrand<-ifelse(d_modelng2$DummyBrand=='0',0,1)
+d_modelng2$DummyItemDescription<-ifelse(d_modelng2$DummyItemDescription=='0',0,1)
+d_modelng2$item_condition_id1<-ifelse(d_modelng2$item_condition_id1=='0',0,1)
+d_modelng2$item_condition_id2<-ifelse(d_modelng2$item_condition_id2=='0',0,1)
+d_modelng2$item_condition_id3<-ifelse(d_modelng2$item_condition_id3=='0',0,1)
+d_modelng2$FirstCategoryBeauty<-ifelse(d_modelng2$FirstCategoryBeauty=='0',0,1)
+d_modelng2$FirstCategoryElectronics<-ifelse(d_modelng2$FirstCategoryElectronics=='0',0,1)
+d_modelng2$FirstCategoryKids<-ifelse(d_modelng2$FirstCategoryKids=='0',0,1)
+d_modelng2$FirstCategoryMen<-ifelse(d_modelng2$FirstCategoryMen=='0',0,1)
+d_modelng2$FirstCategoryWomen<-ifelse(d_modelng2$FirstCategoryWomen=='0',0,1)
+d_modelng2$filt_brandBrandMissing<-ifelse(d_modelng2$filt_brandBrandMissing=='0',0,1)
+d_modelng2$filt_brandothers<-ifelse(d_modelng2$filt_brandothers=='0',0,1)
+set.seed(2019)
+inTrain <- createDataPartition(y = d_modelng2$y,   # outcome variable
+                               p = .80,   # doing a 5-fold
+                               list = F)
+train <- d_modelng2[inTrain,]  # training data set
+test <- d_modelng2[-inTrain,]  # test data set
+
+library(psych)
+pcang2<- principal(train[,2:ncol(train)], 
+                 nfactors = 15,
+                 rotate = 'none', 
+                 scores = T
+)
+pcang2$loadings
+
+################################################################################
+# LASSO ON Bag of words
+###############################################################################
+library(caret)
+ctrl<-trainControl(method='cv',number=5,classProbs = F, 
+                   summaryFunction = defaultSummary)
+
+lassofit<- train(y~., data=d_modelbw,
+                 method='lars', trControl=ctrl,
+                 tuneLength=38,metric='RMSE')
+lassofit
 
 
 ################################################################################
@@ -579,3 +632,4 @@ rm(d_modelng24, d_modelng3)
 library(wordcloud)
 wordcloud(words = highfreq$keyword, freq = highfreq$freq, scale=c(4,0.1), max.words = 20,
           colors = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02"))
+
